@@ -34,7 +34,7 @@ x_valid = train_transaction['isFraud']
 # RF
 # n_estimators = 31     ----- 0.7139
 # min_samples_leaf = 25 ----- 0.6894
-RF = ensemble.RandomForestClassifier(n_estimators = 31
+RF = ensemble.RandomForestClassifier(n_estimators=31
                                      , n_jobs=-1
                                      , max_depth=31
                                      , min_samples_split = 0.3
