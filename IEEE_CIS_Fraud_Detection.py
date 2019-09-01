@@ -3,7 +3,9 @@ import warnings
 import pandas as pd
 import numpy as np
 import xgboost
-from sklearn import model_selection, preprocessing, ensemble, metrics
+from sklearn import model_selection, preprocessing, ensemble, metrics, linear_model
+from sklearn.preprocessing import MinMaxScaler
+from imblearn.over_sampling import SMOTE
 
 warnings.simplefilter('ignore')
 
@@ -23,7 +25,7 @@ encoder = preprocessing.LabelEncoder()
 
 for i in non_num_cols:
     train_transaction['mod_'+i] = encoder.fit_transform(train_transaction[i].fillna(train_transaction[i].mode()[0]))
-    test_transaction['mod_'+i] = encoder.fit_transform(test_transaction[i].fillna(test_transaction[i].mode()[0])
+    test_transaction['mod_'+i] = encoder.fit_transform(test_transaction[i].fillna(test_transaction[i].mode()[0]))
 
 col_list = [x for x in train_transaction.columns if x not in non_num_cols+['isFraud']]
 
@@ -31,23 +33,33 @@ x_train = train_transaction[col_list].fillna(0)
 y_train = test_transaction[col_list].fillna(0)
 x_valid = train_transaction['isFraud']
 
-# RF
-# n_estimators = 31     ----- 0.7139
-# min_samples_leaf = 25 ----- 0.6894
-RF = ensemble.RandomForestClassifier(n_estimators=31
-                                     , n_jobs=-1
-                                     , max_depth=31
-                                     , min_samples_split = 0.3
-                                    )
-RF.fit(x_train, x_valid)
-predictions = RF.predict(y_train)
+scaler = MinMaxScaler(feature_range = (0,1))
+
+scaler.fit(x_train)
+x_train = scaler.transform(x_train)
+y_train = scaler.transform(y_train)
+
+from imblearn.over_sampling import RandomOverSampler
+#ros = RandomOverSampler(random_state=0)
+#x_train, x_valid = ros.fit_resample(x_train, x_valid)
+x_train, x_valid = SMOTE().fit_resample(x_train, x_valid)
+
+# RF ----- 0.7139
+#RF = ensemble.RandomForestClassifier(n_jobs=-1)
+#RF.fit(x_train, x_valid)
+#predictions = RF.predict(y_train)
 
 #XGboost - 0,68
-#XGb = xgboost.XGBClassifier()
-#XGb.fit(x_train, x_valid)
-#predictions = XGb.predict(y_train)
+XGb = xgboost.XGBClassifier(n_estimators=100)
+XGb.fit(x_train, x_valid)
+predictions = XGb.predict(y_train)
 
+# LR
+#LR = linear_model.LogisticRegression(penalty = 'l2', C = 100, n_jobs=-1)
 
-output['TransactionID'] = y_train['TransactionID']
+#LR.fit(x_train, x_valid)
+#predictions = LR.predict(y_train)
+
+output['TransactionID'] = test_transaction[col_list].fillna(0)['TransactionID']
 output['isFraud'] = predictions
 output.to_csv(output_path, index=False)
