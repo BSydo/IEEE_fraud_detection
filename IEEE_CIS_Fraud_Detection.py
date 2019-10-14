@@ -87,11 +87,12 @@ def feature_eng_t(dataset):
 # algorithm testing
 def clf(x_train, y_train, x_test):
 
-    RF = ensemble.RandomForestClassifier(n_estimators=32#31
+    RF = ensemble.RandomForestClassifier(n_estimators=32
                                         , n_jobs=-1
-                                        , max_depth=8#31
-                                        , min_samples_split = 0.1#0.3
-                                        ) #76,71
+                                        , min_samples_split = 0.1
+                                        , max_depth=8
+                                        #, max_features = 'log2' # None - worse result
+                                        )
 
     #LR = linear_model.LogisticRegression(n_jobs=-1)#70.48
 
